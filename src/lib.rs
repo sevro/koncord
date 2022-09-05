@@ -8,7 +8,7 @@ use rust_decimal::Decimal;
 
 use crate::client::Client;
 use crate::transaction::{
-    ChargedBack, DisputeLookup, Processing, Recieved, Record, Resolved, Transaction,
+    ChargedBack, DisputeLookup, Processing, Received, Record, Resolved, Transaction,
     TransactionKind,
 };
 
@@ -71,7 +71,7 @@ fn process_record<R: std::io::Read + std::io::Seek>(
     disputes: &mut HashMap<u32, Decimal>,
     search_records: &mut csv::Reader<R>,
 ) -> Result<(), Box<dyn Error>> {
-    let recieved = Transaction::<Recieved>::from(record);
+    let recieved = Transaction::<Received>::from(record);
 
     match recieved.kind() {
         TransactionKind::Deposit | TransactionKind::Withdrawal => {

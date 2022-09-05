@@ -58,7 +58,7 @@ pub struct Transaction<S> {
     state: S,
 }
 
-impl Transaction<Recieved> {
+impl Transaction<Received> {
     pub fn kind(&self) -> &TransactionKind {
         &self.state.kind
     }
@@ -139,7 +139,8 @@ impl Transaction<ChargedBack> {
 }
 
 /// Transaction always starts in this state.
-pub struct Recieved {
+#[derive(Debug, Clone)]
+pub struct Received {
     id: u32,
     kind: TransactionKind,
     amount: Option<Decimal>,
@@ -201,10 +202,10 @@ impl ChargedBack {
     }
 }
 
-impl From<Record> for Transaction<Recieved> {
+impl From<Record> for Transaction<Received> {
     fn from(record: Record) -> Self {
         Transaction {
-            state: Recieved {
+            state: Received {
                 id: record.tx,
                 kind: record.kind,
                 amount: record.amount,
@@ -214,20 +215,28 @@ impl From<Record> for Transaction<Recieved> {
 }
 
 #[derive(Debug)]
-pub struct InvalidTransitionError;
+pub struct InvalidTransitionError {
+    from: String,
+    to: String,
+}
 
 impl std::fmt::Display for InvalidTransitionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Invalid state transition",)
+        write!(
+            f,
+            "Invalid state transition from {} to {}",
+            self.from, self.to
+        )
     }
 }
 
 impl Error for InvalidTransitionError {}
 
-impl TryFrom<Transaction<Recieved>> for Transaction<Processing> {
+impl TryFrom<Transaction<Received>> for Transaction<Processing> {
     type Error = InvalidTransitionError;
 
-    fn try_from(prev: Transaction<Recieved>) -> Result<Self, Self::Error> {
+    fn try_from(prev: Transaction<Received>) -> Result<Self, Self::Error> {
+        println!("previous transaction: {prev:?}");
         match prev.state.kind {
             TransactionKind::Deposit => {
                 if let Some(amount) = prev.state.amount {
@@ -239,20 +248,33 @@ impl TryFrom<Transaction<Recieved>> for Transaction<Processing> {
                     return Ok(Transaction::<Processing>::new(prev.state.kind, amount));
                 }
             }
-            _ => return Err(InvalidTransitionError),
+            kind => {
+                return Err(InvalidTransitionError {
+                    from: "Transaction<Received>".to_string(),
+                    to: format!("{kind:?}"),
+                })
+            }
         };
 
-        Err(InvalidTransitionError)
+        Err(InvalidTransitionError {
+            from: "Transaction<Received>".to_string(),
+            to: "Transaction<Processing>".to_string(),
+        })
     }
 }
 
-impl TryFrom<Transaction<Recieved>> for Transaction<DisputeLookup> {
+impl TryFrom<Transaction<Received>> for Transaction<DisputeLookup> {
     type Error = InvalidTransitionError;
 
-    fn try_from(prev: Transaction<Recieved>) -> Result<Self, Self::Error> {
+    fn try_from(prev: Transaction<Received>) -> Result<Self, Self::Error> {
         match prev.state.kind {
             TransactionKind::Dispute => Ok(Transaction::<DisputeLookup>::new(prev.state.id)),
-            _ => Err(InvalidTransitionError),
+            kind => {
+                return Err(InvalidTransitionError {
+                    from: "Transaction<Received>".to_string(),
+                    to: format!("{kind:?}"),
+                })
+            }
         }
     }
 }
@@ -268,17 +290,25 @@ impl TryFrom<Transaction<DisputeLookup>> for Transaction<Processing> {
             ));
         }
 
-        Err(InvalidTransitionError)
+        Err(InvalidTransitionError {
+            from: "Transaction<DisputeLookup>".to_string(),
+            to: "Transaction<Processing>".to_string(),
+        })
     }
 }
 
-impl TryFrom<Transaction<Recieved>> for Transaction<Resolved> {
+impl TryFrom<Transaction<Received>> for Transaction<Resolved> {
     type Error = InvalidTransitionError;
 
-    fn try_from(prev: Transaction<Recieved>) -> Result<Self, Self::Error> {
+    fn try_from(prev: Transaction<Received>) -> Result<Self, Self::Error> {
         match prev.state.kind {
             TransactionKind::Resolve => Ok(Transaction::<Resolved>::new(prev.state.id)),
-            _ => Err(InvalidTransitionError),
+            kind => {
+                return Err(InvalidTransitionError {
+                    from: "Transaction<Received>".to_string(),
+                    to: format!("{kind:?}"),
+                })
+            }
         }
     }
 }
@@ -294,17 +324,25 @@ impl TryFrom<Transaction<Resolved>> for Transaction<Processing> {
             ));
         }
 
-        Err(InvalidTransitionError)
+        Err(InvalidTransitionError {
+            from: "Transaction<Resolved>".to_string(),
+            to: "Transaction<Processing>".to_string(),
+        })
     }
 }
 
-impl TryFrom<Transaction<Recieved>> for Transaction<ChargedBack> {
+impl TryFrom<Transaction<Received>> for Transaction<ChargedBack> {
     type Error = InvalidTransitionError;
 
-    fn try_from(prev: Transaction<Recieved>) -> Result<Self, Self::Error> {
+    fn try_from(prev: Transaction<Received>) -> Result<Self, Self::Error> {
         match prev.state.kind {
             TransactionKind::Chargeback => Ok(Transaction::<ChargedBack>::new(prev.state.id)),
-            _ => Err(InvalidTransitionError),
+            kind => {
+                return Err(InvalidTransitionError {
+                    from: "Transaction<Received>".to_string(),
+                    to: format!("{kind:?}"),
+                })
+            }
         }
     }
 }
@@ -320,14 +358,9 @@ impl TryFrom<Transaction<ChargedBack>> for Transaction<Processing> {
             ));
         }
 
-        Err(InvalidTransitionError)
+        Err(InvalidTransitionError {
+            from: "Transaction<ChargedBack>".to_string(),
+            to: "Transaction<Processing>".to_string(),
+        })
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn client_new() {}
 }

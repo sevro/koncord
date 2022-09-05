@@ -69,6 +69,13 @@ Account balances are represented using a fixed point datatype to avoid errors
 introduced by floating point arithmetic. All operations on `Account` are
 thoroughly unit tested, although it would be good to add fuzzing here.
 
+## Functional Tests
+
+* [Basic functionality](tests/toys.rs)
+* [Complex functionality](tests/complex.rs)
+* [Maximum number of clients](tests/clients_max.rs)
+* [100K transactions](tests/tx_stress.rs)
+
 ## Dependencies
 
 * [serde](https://crates.io/crates/serde)
