@@ -17,16 +17,24 @@ pub struct Record {
     /// Client ID.
     client: u16,
     /// Transaction ID.
-    pub tx: u32,
+    tx: u32,
     /// Transaction amount.
     ///
     /// A decimal value with a precision of up to four places past the decimal.
-    pub amount: Option<Decimal>,
+    amount: Option<Decimal>,
 }
 
 impl Record {
     pub fn client_id(&self) -> u16 {
         self.client
+    }
+
+    pub fn tx(&self) -> u32 {
+        self.tx
+    }
+
+    pub fn amount(&self) -> Option<Decimal> {
+        self.amount
     }
 }
 
@@ -309,4 +317,12 @@ impl TryFrom<Transaction<ChargedBack>> for Transaction<Processing> {
 
         Err(InvalidTransitionError)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_new() {}
 }

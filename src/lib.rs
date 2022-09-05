@@ -48,8 +48,8 @@ fn process_record<R: std::io::Read + std::io::Seek>(
         TransactionKind::Dispute => {
             let mut dispute_lookup = Transaction::<DisputeLookup>::try_from(recieved)?;
             if let Some(record) = lookup_record(search_records, dispute_lookup.tx())? {
-                disputes.insert(record.tx, record.amount.unwrap());
-                dispute_lookup.set_amount(record.amount);
+                disputes.insert(record.tx(), record.amount().unwrap());
+                dispute_lookup.set_amount(record.amount());
                 let processing = Transaction::<Processing>::try_from(dispute_lookup)?;
                 processing.process(client.get_mut());
             }
