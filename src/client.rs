@@ -1,12 +1,22 @@
+//! Clinet account management.
+//!
+//! This module provides the `Client` type which is the interface for working
+//! with accounts.
+
 use std::cmp::Ordering;
 
 use rust_decimal::Decimal;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 
+/// The number of digits to the right of the decimal point.
+///
+/// A scale of four places past the decimal for all values.
+const SCALE: u32 = 4;
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct Client {
     id: u16,
-    pub(crate) account: Account,
+    account: Account,
 }
 
 impl Client {
@@ -15,6 +25,10 @@ impl Client {
             id,
             account: Account::new(),
         }
+    }
+
+    pub fn get_mut(&mut self) -> &mut Account {
+        &mut self.account
     }
 }
 
@@ -136,9 +150,9 @@ struct Balance {
 impl Balance {
     fn new() -> Self {
         Balance {
-            available: Decimal::new(0, 4),
-            held: Decimal::new(0, 4),
-            total: Decimal::new(0, 4),
+            available: Decimal::new(0, SCALE),
+            held: Decimal::new(0, SCALE),
+            total: Decimal::new(0, SCALE),
         }
     }
 
@@ -191,8 +205,6 @@ impl Balance {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const SCALE: u32 = 4;
 
     #[test]
     fn client_new() {

@@ -5,7 +5,30 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 
 use crate::client::Account;
-use crate::Record;
+
+/// Transaction record.
+///
+/// A single transaction record.
+#[derive(Debug, Deserialize)]
+pub struct Record {
+    /// Transaction Type.
+    #[serde(rename = "type")]
+    kind: TransactionKind,
+    /// Client ID.
+    client: u16,
+    /// Transaction ID.
+    pub tx: u32,
+    /// Transaction Ammount.
+    ///
+    /// A decimal value with a precision of up to four places past the decimal.
+    pub ammount: Option<Decimal>,
+}
+
+impl Record {
+    pub fn client_id(&self) -> u16 {
+        self.client
+    }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "lowercase")]
