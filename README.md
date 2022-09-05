@@ -65,7 +65,7 @@ The program will exit on errors including:
 * Invalid records
 * Attempting an invalid state transition
 
-Transactions are implemented in [transactions.rs](src/transactions.rs) and rely
+Transactions are implemented in [transaction.rs](src/transaction.rs) and rely
 on the typesystem and the functional tests for correctness.
 
 ## Clients and Accounts
