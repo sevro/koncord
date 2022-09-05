@@ -70,7 +70,7 @@ on the typesystem and the functional tests for correctness.
 
 ## Clients and Accounts
 
-`Client`s and their accounts are implemented in [client.rs](src/clients.rs).
+`Client`s and their accounts are implemented in [client.rs](src/client.rs).
 Account balances are represented using a fixed point datatype to avoid errors
 introduced by floating point arithmetic. All operations on `Account` are
 thoroughly unit tested, although it would be good to add fuzzing here.
