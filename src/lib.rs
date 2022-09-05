@@ -83,7 +83,7 @@ fn lookup_record<R: std::io::Read + std::io::Seek>(
     let mut result: Option<Record> = None;
     for record_result in search_records.deserialize() {
         let record: Record = record_result?;
-        if record.tx == tx {
+        if record.tx() == tx {
             result = Some(record);
             break;
         }
