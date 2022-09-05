@@ -13,8 +13,8 @@ cargo run -- transactions.csv > accounts.csv
 Transaction flow is implemented as a state machine using `from` or `try_from`
 as appropriate for transitions that do not require any additional context and
 consuming methods where additional context is required. No stable and actively
-maintained state machine libraries are available on [crates.io](crates.io) to
-simplify the code here.
+maintained state machine libraries are available on [crates.io](https://crates.io)
+to simplify the code here.
 
 Each record is processed sequentially through the states shown below. The
 dispute cache stores the dispute Transaction ID and amount before processing
