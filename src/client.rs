@@ -20,6 +20,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Create a new `Client` with `id` and `0` balance.
     pub fn new(id: u16) -> Self {
         Client {
             id,
@@ -27,6 +28,7 @@ impl Client {
         }
     }
 
+    /// Returns a mutable reference to the `Client`s `Account`.
     pub fn get_mut(&mut self) -> &mut Account {
         &mut self.account
     }
@@ -67,6 +69,7 @@ impl Serialize for Client {
     }
 }
 
+/// Client account.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Account {
     inner: AccountInner,
@@ -79,6 +82,9 @@ impl Account {
         }
     }
 
+    /// Increase the available and total funds of the client account by ammount.
+    ///
+    /// Only fails when the account is locked.
     pub fn deposit(&mut self, ammount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.deposit(ammount),
@@ -86,6 +92,10 @@ impl Account {
         }
     }
 
+    /// Decrease the available and total funds of the client account by ammount.
+    ///
+    /// Fails if account is locked or the account does not have sufficient
+    /// available funds.
     pub fn withdraw(&mut self, ammount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => {
@@ -95,6 +105,10 @@ impl Account {
         }
     }
 
+    /// Associated funds moved to held.
+    ///
+    /// Available funds decreased by ammount, held funds increased by ammount,
+    /// total funds remain the same.
     pub fn dispute(&mut self, ammount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.dispute(ammount),
@@ -102,6 +116,10 @@ impl Account {
         }
     }
 
+    /// Resolution to a dispute, releases held funds.
+    ///
+    /// Held funds decreased by ammount, available funds increased by ammount,
+    /// total funds remain the same.
     pub fn resolve(&mut self, ammount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.resolve(ammount),
@@ -109,6 +127,9 @@ impl Account {
         }
     }
 
+    /// Final state of a dispute and represents the client reversing a transaction.
+    ///
+    /// Held funds and total funds are decreased by ammount.
     pub fn chargeback(&mut self, ammount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => {
@@ -156,18 +177,11 @@ impl Balance {
         }
     }
 
-    // Increase the available and total funds of the client account by ammount.
-    //
-    // Fails if account is locked.
     fn deposit(&mut self, ammount: Decimal) {
         self.available += ammount;
         self.total += ammount;
     }
 
-    // Decrease the available and total funds of the client account by ammount.
-    //
-    // Fails if account is locked or the account does not have sufficient
-    // available funds.
     fn withdraw(&mut self, ammount: Decimal) {
         if self.available > ammount {
             self.available -= ammount;
@@ -175,27 +189,16 @@ impl Balance {
         }
     }
 
-    // Associated funds moved to held.
-    //
-    // Available funds decreased by ammount, held funds increased by ammount,
-    // total funds remain the same.
     fn dispute(&mut self, ammount: Decimal) {
         self.available -= ammount;
         self.held += ammount;
     }
 
-    // Resolution to a dispute, releases held funds.
-    //
-    // Held funds decreased by ammount, available funds increased by ammount,
-    // total funds remain the same.
     fn resolve(&mut self, ammount: Decimal) {
         self.available += ammount;
         self.held -= ammount;
     }
 
-    // Final state of a dispute and represents the client reversing a transaction.
-    //
-    // Held funds and total funds are decreased by ammount.
     fn chargeback(&mut self, ammount: Decimal) {
         self.held -= ammount;
         self.total -= ammount;
