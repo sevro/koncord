@@ -18,10 +18,10 @@ pub struct Record {
     client: u16,
     /// Transaction ID.
     pub tx: u32,
-    /// Transaction Ammount.
+    /// Transaction amount.
     ///
     /// A decimal value with a precision of up to four places past the decimal.
-    pub ammount: Option<Decimal>,
+    pub amount: Option<Decimal>,
 }
 
 impl Record {
@@ -52,19 +52,19 @@ impl Transaction<Recieved> {
 }
 
 impl Transaction<Processing> {
-    fn new(kind: TransactionKind, ammount: Decimal) -> Self {
+    fn new(kind: TransactionKind, amount: Decimal) -> Self {
         Transaction {
-            state: Processing::new(kind, ammount),
+            state: Processing::new(kind, amount),
         }
     }
 
     pub fn process(self, account: &mut Account) -> Transaction<Completed> {
         match self.state.kind {
-            TransactionKind::Deposit => account.deposit(self.state.ammount),
-            TransactionKind::Withdrawal => account.withdraw(self.state.ammount),
-            TransactionKind::Dispute => account.dispute(self.state.ammount),
-            TransactionKind::Resolve => account.resolve(self.state.ammount),
-            TransactionKind::Chargeback => account.chargeback(self.state.ammount),
+            TransactionKind::Deposit => account.deposit(self.state.amount),
+            TransactionKind::Withdrawal => account.withdraw(self.state.amount),
+            TransactionKind::Dispute => account.dispute(self.state.amount),
+            TransactionKind::Resolve => account.resolve(self.state.amount),
+            TransactionKind::Chargeback => account.chargeback(self.state.amount),
         }
 
         Transaction::<Completed>::new()
@@ -88,8 +88,8 @@ impl Transaction<DisputeLookup> {
         self.state.tx
     }
 
-    pub fn set_ammount(&mut self, ammount: Option<Decimal>) {
-        self.state.ammount = ammount;
+    pub fn set_amount(&mut self, amount: Option<Decimal>) {
+        self.state.amount = amount;
     }
 }
 
@@ -104,8 +104,8 @@ impl Transaction<Resolved> {
         self.state.tx
     }
 
-    pub fn set_ammount(&mut self, ammount: Option<Decimal>) {
-        self.state.ammount = ammount;
+    pub fn set_amount(&mut self, amount: Option<Decimal>) {
+        self.state.amount = amount;
     }
 }
 
@@ -120,8 +120,8 @@ impl Transaction<ChargedBack> {
         self.state.tx
     }
 
-    pub fn set_ammount(&mut self, ammount: Option<Decimal>) {
-        self.state.ammount = ammount;
+    pub fn set_amount(&mut self, amount: Option<Decimal>) {
+        self.state.amount = amount;
     }
 }
 
@@ -129,19 +129,19 @@ impl Transaction<ChargedBack> {
 pub struct Recieved {
     id: u32,
     kind: TransactionKind,
-    ammount: Option<Decimal>,
+    amount: Option<Decimal>,
 }
 
 /// Applies transaction to account.
 #[derive(Debug, Clone)]
 pub struct Processing {
     kind: TransactionKind,
-    pub ammount: Decimal,
+    pub amount: Decimal,
 }
 
 impl Processing {
-    fn new(kind: TransactionKind, ammount: Decimal) -> Self {
-        Processing { kind, ammount }
+    fn new(kind: TransactionKind, amount: Decimal) -> Self {
+        Processing { kind, amount }
     }
 }
 
@@ -149,16 +149,16 @@ impl Processing {
 #[derive(Debug, Clone)]
 pub struct Completed;
 
-/// Disputed transaction needs to be looked up for ammount of funds to hold.
+/// Disputed transaction needs to be looked up for amount of funds to hold.
 #[derive(Debug, Clone)]
 pub struct DisputeLookup {
     tx: u32,
-    pub ammount: Option<Decimal>,
+    pub amount: Option<Decimal>,
 }
 
 impl DisputeLookup {
     fn new(tx: u32) -> Self {
-        DisputeLookup { tx, ammount: None }
+        DisputeLookup { tx, amount: None }
     }
 }
 
@@ -166,12 +166,12 @@ impl DisputeLookup {
 #[derive(Debug, Clone)]
 pub struct Resolved {
     tx: u32,
-    ammount: Option<Decimal>,
+    amount: Option<Decimal>,
 }
 
 impl Resolved {
     fn new(tx: u32) -> Self {
-        Resolved { tx, ammount: None }
+        Resolved { tx, amount: None }
     }
 }
 
@@ -179,12 +179,12 @@ impl Resolved {
 #[derive(Debug, Clone)]
 pub struct ChargedBack {
     tx: u32,
-    ammount: Option<Decimal>,
+    amount: Option<Decimal>,
 }
 
 impl ChargedBack {
     fn new(tx: u32) -> Self {
-        ChargedBack { tx, ammount: None }
+        ChargedBack { tx, amount: None }
     }
 }
 
@@ -194,7 +194,7 @@ impl From<Record> for Transaction<Recieved> {
             state: Recieved {
                 id: record.tx,
                 kind: record.kind,
-                ammount: record.ammount,
+                amount: record.amount,
             },
         }
     }
@@ -217,13 +217,13 @@ impl TryFrom<Transaction<Recieved>> for Transaction<Processing> {
     fn try_from(prev: Transaction<Recieved>) -> Result<Self, Self::Error> {
         match prev.state.kind {
             TransactionKind::Deposit => {
-                if let Some(ammount) = prev.state.ammount {
-                    return Ok(Transaction::<Processing>::new(prev.state.kind, ammount));
+                if let Some(amount) = prev.state.amount {
+                    return Ok(Transaction::<Processing>::new(prev.state.kind, amount));
                 }
             }
             TransactionKind::Withdrawal => {
-                if let Some(ammount) = prev.state.ammount {
-                    return Ok(Transaction::<Processing>::new(prev.state.kind, ammount));
+                if let Some(amount) = prev.state.amount {
+                    return Ok(Transaction::<Processing>::new(prev.state.kind, amount));
                 }
             }
             _ => return Err(InvalidTransitionError),
@@ -248,10 +248,10 @@ impl TryFrom<Transaction<DisputeLookup>> for Transaction<Processing> {
     type Error = InvalidTransitionError;
 
     fn try_from(prev: Transaction<DisputeLookup>) -> Result<Self, Self::Error> {
-        if let Some(ammount) = prev.state.ammount {
+        if let Some(amount) = prev.state.amount {
             return Ok(Transaction::<Processing>::new(
                 TransactionKind::Dispute,
-                ammount,
+                amount,
             ));
         }
 
@@ -274,10 +274,10 @@ impl TryFrom<Transaction<Resolved>> for Transaction<Processing> {
     type Error = InvalidTransitionError;
 
     fn try_from(prev: Transaction<Resolved>) -> Result<Self, Self::Error> {
-        if let Some(ammount) = prev.state.ammount {
+        if let Some(amount) = prev.state.amount {
             return Ok(Transaction::<Processing>::new(
                 TransactionKind::Resolve,
-                ammount,
+                amount,
             ));
         }
 
@@ -300,10 +300,10 @@ impl TryFrom<Transaction<ChargedBack>> for Transaction<Processing> {
     type Error = InvalidTransitionError;
 
     fn try_from(prev: Transaction<ChargedBack>) -> Result<Self, Self::Error> {
-        if let Some(ammount) = prev.state.ammount {
+        if let Some(amount) = prev.state.amount {
             return Ok(Transaction::<Processing>::new(
                 TransactionKind::Chargeback,
-                ammount,
+                amount,
             ));
         }
 

@@ -48,24 +48,24 @@ fn process_record<R: std::io::Read + std::io::Seek>(
         TransactionKind::Dispute => {
             let mut dispute_lookup = Transaction::<DisputeLookup>::try_from(recieved)?;
             if let Some(record) = lookup_record(search_records, dispute_lookup.tx())? {
-                disputes.insert(record.tx, record.ammount.unwrap());
-                dispute_lookup.set_ammount(record.ammount);
+                disputes.insert(record.tx, record.amount.unwrap());
+                dispute_lookup.set_amount(record.amount);
                 let processing = Transaction::<Processing>::try_from(dispute_lookup)?;
                 processing.process(client.get_mut());
             }
         }
         TransactionKind::Resolve => {
             let mut resolved = Transaction::<Resolved>::try_from(recieved)?;
-            if let Some(ammount) = disputes.remove(&resolved.tx()) {
-                resolved.set_ammount(Some(ammount));
+            if let Some(amount) = disputes.remove(&resolved.tx()) {
+                resolved.set_amount(Some(amount));
                 let processing = Transaction::<Processing>::try_from(resolved)?;
                 processing.process(client.get_mut());
             }
         }
         TransactionKind::Chargeback => {
             let mut chargeback = Transaction::<ChargedBack>::try_from(recieved)?;
-            if let Some(ammount) = disputes.remove(&chargeback.tx()) {
-                chargeback.set_ammount(Some(ammount));
+            if let Some(amount) = disputes.remove(&chargeback.tx()) {
+                chargeback.set_amount(Some(amount));
                 let processing = Transaction::<Processing>::try_from(chargeback)?;
                 processing.process(client.get_mut());
             }

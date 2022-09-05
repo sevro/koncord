@@ -4,7 +4,7 @@ use koncord;
 use koncord::client::Client;
 
 const BASE_DATA: &str = "\
-type,       client, tx, ammount
+type,       client, tx, amount
 deposit,    1,      1,  1.0
 deposit,    2,      2,  2.0
 deposit,    1,      3,  2.0
