@@ -1,7 +1,8 @@
 //! Client account management.
 //!
 //! This module provides the `Client` type which is the interface for working
-//! with accounts and associating them with their Clients ID.
+//! with accounts and associating them with their Clients ID. It also
+//! implements all operations on accounts.
 
 use std::cmp::Ordering;
 
@@ -13,6 +14,9 @@ use serde::ser::{Serialize, SerializeStruct, Serializer};
 /// A scale of four places past the decimal for all values.
 const SCALE: u32 = 4;
 
+/// A client represented by a Client ID and the associated account.
+///
+/// `Client` also implements `Serialize` directly to the output format.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Client {
     id: u16,
@@ -73,8 +77,8 @@ impl Serialize for Client {
 ///
 /// Accounts have two primary states `Open` and `Frozen`. When accounts are
 /// `Open` nearly all transactions are permitted with the exception of
-/// withdrawals due to insufficient funds. All transactions are disallowed
-/// when the account is locked.
+/// withdrawals due to insufficient funds and any transaction with a negative
+/// amount. All transactions are disallowed when the account is locked.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Account {
     inner: AccountInner,
@@ -89,7 +93,7 @@ impl Account {
 
     /// Increase the available and total funds of the client account by amount.
     ///
-    /// Only fails when the account is locked.
+    /// Only fails when the account is locked or amount is negative.
     pub(crate) fn deposit(&mut self, amount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.deposit(amount),
@@ -100,7 +104,7 @@ impl Account {
     /// Decrease the available and total funds of the client account by amount.
     ///
     /// Fails if account is locked, the account does not have sufficient
-    /// available funds, or if the amount is less than zero.
+    /// available funds, or if the amount is negative.
     pub fn withdraw(&mut self, amount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => {
@@ -113,7 +117,8 @@ impl Account {
     /// Associated funds moved to held.
     ///
     /// Available funds decreased by amount, held funds increased by amount,
-    /// total funds remain the same.
+    /// total funds remain the same. Fails if account is locked or amount is
+    /// negative.
     pub fn dispute(&mut self, amount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.dispute(amount),
@@ -124,7 +129,8 @@ impl Account {
     /// Resolution to a dispute, releases held funds.
     ///
     /// Held funds decreased by amount, available funds increased by amount,
-    /// total funds remain the same.
+    /// total funds remain the same. Fails if account is locked or amount is
+    /// negative.
     pub fn resolve(&mut self, amount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => balance.resolve(amount),
@@ -134,7 +140,8 @@ impl Account {
 
     /// Final state of a dispute and represents the client reversing a transaction.
     ///
-    /// Held funds and total funds are decreased by amount.
+    /// Held funds and total funds are decreased by amount. Fails if account is
+    /// locked or amount is negative.
     pub fn chargeback(&mut self, amount: Decimal) {
         match &mut self.inner {
             AccountInner::Open { balance } => {

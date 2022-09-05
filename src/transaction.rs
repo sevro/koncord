@@ -1,3 +1,4 @@
+//! Transactions provides a state machine to process records to completion.
 use std::convert::TryFrom;
 use std::error::Error;
 
@@ -8,7 +9,7 @@ use crate::client::Account;
 
 /// Transaction record.
 ///
-/// A single transaction record.
+/// The representation of a raw transaction record as received by the service.
 #[derive(Debug, Deserialize)]
 pub struct Record {
     /// Transaction Type.
@@ -38,6 +39,7 @@ impl Record {
     }
 }
 
+/// Types of transactions.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TransactionKind {
@@ -48,6 +50,9 @@ pub enum TransactionKind {
     Chargeback,
 }
 
+/// A single transaction.
+///
+/// Implements a state machine for transactions.
 #[derive(Debug, Clone)]
 pub struct Transaction<S> {
     state: S,

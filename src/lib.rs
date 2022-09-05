@@ -12,6 +12,39 @@ use crate::transaction::{
     TransactionKind,
 };
 
+/// Processes all transaction records.
+///
+/// Each record is processed sequentially through the states shown below. The
+/// dispute cache stores the dispute Transaction ID and amount before
+/// processing them to avoid unnecessary costly lookups for resolve and
+/// chargeback transactions.
+///
+/// New clients are created with zero balances as new Client IDs are encountered.
+///
+/// ```diagram
+///                    ┌──────┐
+///      ┌───────────┬─┤Record├─┬──────────┐
+///      │           │ └──────┘ │          │
+///      │           │          │          │
+/// ┌────▼─────┐ ┌───▼───┐ ┌────▼──┐ ┌─────▼────┐
+/// │Deposit or│ │Dispute│ │Resolve│ │Chargeback│
+/// │Withdrawal│ │Lookup │ │Lookup │ │Lookup    │
+/// └────┬─────┘ └───┬───┘ └──▲─┬──┘ └─▲───┬────┘
+///      │           │        │ │      │   │
+///      │    ┌──────┴──────┐ │ │      │   │
+///      │    │Dispute Cache├─┴─┼──────┘   │
+///      │    └──────┬──────┘   │          │
+///      │           │          │          │
+///      │           │          │          │
+/// ┌────▼─────┐     │          │          │
+/// │Processing◄─────┴──────────┴──────────┘
+/// └────┬─────┘
+///      │
+///      │
+/// ┌────┴───┐
+/// │Complete│
+/// └────────┘
+/// ```
 pub fn run<R: std::io::Read + std::io::Seek>(
     clients: &mut HashMap<u16, Client>,
     mut transaction_records: csv::Reader<R>,
