@@ -22,8 +22,10 @@ to avoid unnecessary costly lookups for resolve and chargeback transactions.
 Due to a bug found running the [100k_transacitons.csv](tests/data/100k_transactions.csv)
 test dispute lookups always creates a new reader to avoid
 [`seek`](https://docs.rs/csv/latest/csv/struct.Reader.html#method.seek)
-sometimes attempting to process the headers as a record. Parallelizing dispute,
-resolve, and chargeback would be the highest impact optimization.
+sometimes attempting to process the headers as a record.
+
+Parallelizing dispute, resolve, and chargeback would be the highest impact
+optimization along with a smarter dispute lookup search.
 
 ```
                    ┌──────┐
