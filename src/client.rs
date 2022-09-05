@@ -33,6 +33,11 @@ impl Client {
     }
 
     /// Returns a mutable reference to the `Client`s `Account`.
+    pub fn id(&self) -> u16 {
+        self.id
+    }
+
+    /// Returns a mutable reference to the `Client`s `Account`.
     pub fn get_mut(&mut self) -> &mut Account {
         &mut self.account
     }

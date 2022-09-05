@@ -58,7 +58,6 @@ pub fn run<R: std::io::Read + std::io::Seek>(
             .entry(record.client_id())
             .or_insert(Client::new(record.client_id()));
 
-        println!("{record:?}");
         process_record(record, client, &mut disputes, records_path)?;
     }
 
@@ -81,7 +80,7 @@ fn process_record(
         }
         TransactionKind::Dispute => {
             let mut dispute_lookup = Transaction::<DisputeLookup>::try_from(recieved)?;
-            if let Some(record) = lookup_record(records_path, dispute_lookup.tx())? {
+            if let Some(record) = lookup_record(records_path, dispute_lookup.tx(), client.id())? {
                 disputes.insert(record.tx(), record.amount().unwrap());
                 dispute_lookup.set_amount(record.amount());
                 let processing = Transaction::<Processing>::try_from(dispute_lookup)?;
@@ -110,7 +109,10 @@ fn process_record(
 }
 
 // Return record matching Transaction ID `tx` if found, else None.
-fn lookup_record(records_path: &str, tx: u32) -> Result<Option<Record>, Box<dyn Error>> {
+//
+// Checks client IDs match to prevent clients from submitting disputes against
+// accounts that are not theirs.
+fn lookup_record(records_path: &str, tx: u32, id: u16) -> Result<Option<Record>, Box<dyn Error>> {
     let mut search_records = csv::ReaderBuilder::new()
         .trim(csv::Trim::All)
         .flexible(true)
@@ -118,10 +120,11 @@ fn lookup_record(records_path: &str, tx: u32) -> Result<Option<Record>, Box<dyn 
 
     let mut result: Option<Record> = None;
     for record_result in search_records.deserialize() {
-        println!("{record_result:?}");
         let record: Record = record_result?;
         if record.tx() == tx {
-            result = Some(record);
+            if record.client_id() == id {
+                result = Some(record);
+            }
             break;
         }
     }

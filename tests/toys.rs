@@ -28,6 +28,12 @@ client,available,held,total,locked
 2,2,0.0000,2,false
 ";
 
+const TWENTY_EXPECTED: &str = "\
+client,available,held,total,locked
+1,20,0.0000,20,false
+2,20,0.0000,20,false
+";
+
 #[test]
 #[allow(unused_must_use)]
 fn toy_deposit_withdraw() {
@@ -183,7 +189,6 @@ fn toy_twenty() {
         records_path.to_str().unwrap(),
     );
 
-    /*
     let mut wtr = csv::Writer::from_writer(vec![]);
     let mut clients: Vec<&Client> = clients.values().collect();
     clients.sort();
@@ -193,7 +198,6 @@ fn toy_twenty() {
     wtr.flush();
     assert_eq!(
         String::from_utf8(wtr.into_inner().unwrap()).unwrap(),
-        BASE_EXPECTED
+        TWENTY_EXPECTED
     );
-    */
 }
