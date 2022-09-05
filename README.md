@@ -51,6 +51,16 @@ The program will exit on errors including:
 * Invalid records
 * Attempting an invalid state transition
 
+Transactions are implemented in [transactions.rs](src/transactions.rs) and rely
+on the typesystem and the functional tests for correctness.
+
+## Clients and Accounts
+
+`Client`s and their accounts are implemented in [client.rs](src/clients.rs).
+Account balances are represented using a fixed point datatype to avoid errors
+introduced by floating point arithmetic. All operations on `Account` are
+thoroughly unit tested, although it would be good to add fuzzing here.
+
 ## Dependencies
 
 * [serde](https://crates.io/crates/serde)
