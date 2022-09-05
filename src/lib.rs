@@ -48,7 +48,7 @@ use crate::transaction::{
 pub fn run<R: std::io::Read + std::io::Seek>(
     clients: &mut HashMap<u16, Client>,
     mut transaction_records: csv::Reader<R>,
-    mut search_records: csv::Reader<R>,
+    records_path: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut disputes: HashMap<u32, Decimal> = HashMap::new();
 
@@ -58,18 +58,19 @@ pub fn run<R: std::io::Read + std::io::Seek>(
             .entry(record.client_id())
             .or_insert(Client::new(record.client_id()));
 
-        process_record(record, client, &mut disputes, &mut search_records)?;
+        println!("{record:?}");
+        process_record(record, client, &mut disputes, records_path)?;
     }
 
     Ok(())
 }
 
 // Process a single record.
-fn process_record<R: std::io::Read + std::io::Seek>(
+fn process_record(
     record: Record,
     client: &mut Client,
     disputes: &mut HashMap<u32, Decimal>,
-    search_records: &mut csv::Reader<R>,
+    records_path: &str,
 ) -> Result<(), Box<dyn Error>> {
     let recieved = Transaction::<Received>::from(record);
 
@@ -80,7 +81,7 @@ fn process_record<R: std::io::Read + std::io::Seek>(
         }
         TransactionKind::Dispute => {
             let mut dispute_lookup = Transaction::<DisputeLookup>::try_from(recieved)?;
-            if let Some(record) = lookup_record(search_records, dispute_lookup.tx())? {
+            if let Some(record) = lookup_record(records_path, dispute_lookup.tx())? {
                 disputes.insert(record.tx(), record.amount().unwrap());
                 dispute_lookup.set_amount(record.amount());
                 let processing = Transaction::<Processing>::try_from(dispute_lookup)?;
@@ -109,12 +110,15 @@ fn process_record<R: std::io::Read + std::io::Seek>(
 }
 
 // Return record matching Transaction ID `tx` if found, else None.
-fn lookup_record<R: std::io::Read + std::io::Seek>(
-    search_records: &mut csv::Reader<R>,
-    tx: u32,
-) -> Result<Option<Record>, Box<dyn Error>> {
+fn lookup_record(records_path: &str, tx: u32) -> Result<Option<Record>, Box<dyn Error>> {
+    let mut search_records = csv::ReaderBuilder::new()
+        .trim(csv::Trim::All)
+        .flexible(true)
+        .from_path(records_path)?;
+
     let mut result: Option<Record> = None;
     for record_result in search_records.deserialize() {
+        println!("{record_result:?}");
         let record: Record = record_result?;
         if record.tx() == tx {
             result = Some(record);
@@ -122,6 +126,5 @@ fn lookup_record<R: std::io::Read + std::io::Seek>(
         }
     }
 
-    search_records.seek(csv::Position::new())?;
     Ok(result)
 }

@@ -19,6 +19,11 @@ simplify the code here.
 Each record is processed sequentially through the states shown below. The
 dispute cache stores the dispute Transaction ID and amount before processing
 to avoid unnecessary costly lookups for resolve and chargeback transactions.
+Due to a bug found running the [100k_transacitons.csv](tests/data/100k_transactions.csv)
+test dispute lookups always creates a new reader to avoid
+[`seek`](https://docs.rs/csv/latest/csv/struct.Reader.html#method.seek)
+sometimes attempting to process the headers as a record. Parallelizing dispute,
+resolve, and chargeback would be the highest impact optimization.
 
 ```
                    ┌──────┐
@@ -74,7 +79,9 @@ thoroughly unit tested, although it would be good to add fuzzing here.
 * [Basic functionality](tests/toys.rs)
 * [Complex functionality](tests/complex.rs)
 * [Maximum number of clients](tests/clients_max.rs)
-* [100K transactions](tests/tx_stress.rs)
+* [100K transactions](tests/tx_stress.rs): Ignored by default due to time required.
+
+Data files can be found in [tests/data/](tests/data/).
 
 ## Dependencies
 

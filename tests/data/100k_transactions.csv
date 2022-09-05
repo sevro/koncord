@@ -1,4 +1,4 @@
-type,client,tx,ammount
+type,client,tx,amount
 chargeback,13313,1,1.0
 chargeback,56739,2,1.0
 deposit,50660,3,507608852.4594

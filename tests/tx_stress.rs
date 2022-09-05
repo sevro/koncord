@@ -5,6 +5,7 @@ use koncord;
 use koncord::client::Client;
 
 #[test]
+#[ignore]
 #[allow(unused_must_use)]
 fn stress_100k_transactions() {
     let mut stress_test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -19,17 +20,10 @@ fn stress_100k_transactions() {
         .from_path(&stress_test)
         .unwrap();
 
-    let search_records = csv::ReaderBuilder::new()
-        .trim(csv::Trim::All)
-        .flexible(true)
-        .from_path(&stress_test)
-        .unwrap();
-
-    koncord::run(&mut clients, transaction_records, search_records).unwrap();
-    for client in clients.values() {
-        println!("{client:?}");
-    }
-    let num_clients = clients.values().len();
-    println!("-------------======================---------> {num_clients:?}");
-    println!("{clients:?}");
+    koncord::run(
+        &mut clients,
+        transaction_records,
+        stress_test.to_str().unwrap(),
+    )
+    .unwrap();
 }

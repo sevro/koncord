@@ -236,7 +236,6 @@ impl TryFrom<Transaction<Received>> for Transaction<Processing> {
     type Error = InvalidTransitionError;
 
     fn try_from(prev: Transaction<Received>) -> Result<Self, Self::Error> {
-        println!("previous transaction: {prev:?}");
         match prev.state.kind {
             TransactionKind::Deposit => {
                 if let Some(amount) = prev.state.amount {
