@@ -58,6 +58,7 @@ include:
 * The account has ever had a chargeback and is therefor locked.
 * Account has Insufficient funds for withdrawal.
 * The referenced Transaction ID for a dispute, resolve, or chargeback does not exist.
+* Dispute, resolve, and chargebacks against accounts you don't own are also ignored.
 
 The program will exit on errors including:
 
