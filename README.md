@@ -2,6 +2,12 @@
 
 Processes a CSV of transaction records and outputs the resulting client accounts to CSV.
 
+## Usage
+
+```
+cargo run -- transactions.csv > accounts.csv
+```
+
 ## Transactions
 
 Transaction flow is implemented as a state machine using `from` or `try_from`
@@ -39,7 +45,9 @@ to avoid unnecessary costly lookups for resolve and chargeback transactions.
 └────────┘
 ```
 
-Transactions are silently ignored during processing if:
+Many transactions may be silently ignored, this would be a good place to add
+error handling and at least logging. Transactions that are silently ignored
+include:
 
 * Transaction amount is negative.
 * The account has ever had a chargeback and is therefor locked.
